@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin - Stocks</title>
+</head>
+<body>
+  <h1>Admin Panel</h1>
+  <h2>Add New Stock</h2>
+  <form id="stockForm">
+    <input type="text" id="name" placeholder="Stock Name" required />
+    <input type="number" id="price" placeholder="Price" required />
+    <button type="submit">Add Stock</button>
+  </form>
+
+  <h2>Existing Stocks</h2>
+  <div id="stockList"></div>
+
+  <a href="admin-payments.html">Review Payments</a>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDP62hn8sNsTRyEyFMCWDmIy4AyYMAiYEg",
+      authDomain: "meta-ec7b3.firebaseapp.com",
+      projectId: "meta-ec7b3",
+      storageBucket: "meta-ec7b3.firebasestorage.app",
+      messagingSenderId: "544946657332",
+      appId: "1:544946657332:web:adf12094451d5fe09dd261"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.getElementById("stockForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const price = parseFloat(document.getElementById("price").value);
+
+      db.collection("stocks").add({ name, price }).then(() => {
+        alert("Stock added!");
+      });
+    });
+
+    const stockList = document.getElementById("stockList");
+    db.collection("stocks").onSnapshot(snapshot => {
+      stockList.innerHTML = "";
+      snapshot.forEach(doc => {
+        const stock = doc.data();
+        stockList.innerHTML += `<p>${stock.name} - $${stock.price}</p>`;
+      });
+    });
+  </script>
+</body>
+</html>
