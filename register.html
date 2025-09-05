@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head><title>Register</title></head>
+<body>
+  <h1>Register</h1>
+  <form id="registerForm">
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit">Register</button>
+  </form>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDP62hn8sNsTRyEyFMCWDmIy4AyYMAiYEg",
+      authDomain: "meta-ec7b3.firebaseapp.com",
+      projectId: "meta-ec7b3",
+      storageBucket: "meta-ec7b3.firebasestorage.app",
+      messagingSenderId: "544946657332",
+      appId: "1:544946657332:web:adf12094451d5fe09dd261"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    document.getElementById("registerForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => alert("Registration successful!"))
+        .catch(err => alert(err.message));
+    });
+  </script>
+</body>
+</html>
