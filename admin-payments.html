@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin - Payments</title>
+</head>
+<body>
+  <h1>Payment Confirmations</h1>
+  <div id="payments"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDP62hn8sNsTRyEyFMCWDmIy4AyYMAiYEg",
+      authDomain: "meta-ec7b3.firebaseapp.com",
+      projectId: "meta-ec7b3",
+      storageBucket: "meta-ec7b3.firebasestorage.app",
+      messagingSenderId: "544946657332",
+      appId: "1:544946657332:web:adf12094451d5fe09dd261"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const paymentsDiv = document.getElementById("payments");
+    db.collection("payments").orderBy("uploadedAt", "desc").onSnapshot(snapshot => {
+      paymentsDiv.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        paymentsDiv.innerHTML += `
+          <div>
+            <p>User: ${data.userId}</p>
+            <a href="${data.fileUrl}" target="_blank">View File</a>
+            <select onchange="updateStatus('${doc.id}', this.value)">
+              <option value="Pending" ${data.status === "Pending" ? "selected" : ""}>Pending</option>
+              <option value="Verified" ${data.status === "Verified" ? "selected" : ""}>Verified</option>
+              <option value="Rejected" ${data.status === "Rejected" ? "selected" : ""}>Rejected</option>
+            </select>
+          </div>`;
+      });
+    });
+
+    function updateStatus(id, status) {
+      db.collection("payments").doc(id).update({ status }).then(() => {
+        alert("Status updated!");
+      });
+    }
+  </script>
+</body>
+</html>
