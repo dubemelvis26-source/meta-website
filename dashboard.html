@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+</head>
+<body>
+  <h1>User Dashboard</h1>
+  <button id="logout">Logout</button>
+
+  <h2>Available Stocks</h2>
+  <div id="stocks"></div>
+
+  <h2>Your Portfolio</h2>
+  <div id="portfolio"></div>
+
+  <h2>Upload Payment Confirmation</h2>
+  <form id="paymentForm">
+    <input type="file" id="paymentFile" required />
+    <button type="submit">Upload</button>
+  </form>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDP62hn8sNsTRyEyFMCWDmIy4AyYMAiYEg",
+      authDomain: "meta-ec7b3.firebaseapp.com",
+      projectId: "meta-ec7b3",
+      storageBucket: "meta-ec7b3.firebasestorage.app",
+      messagingSenderId: "544946657332",
+      appId: "1:544946657332:web:adf12094451d5fe09dd261"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    // Logout
+    document.getElementById("logout").addEventListener("click", () => {
+      auth.signOut().then(() => location.href = "login.html");
+    });
+
+    // Load stocks
+    const stocksDiv = document.getElementById("stocks");
+    db.collection("stocks").onSnapshot(snapshot => {
+      stocksDiv.innerHTML = "";
+      snapshot.forEach(doc => {
+        const stock = doc.data();
+        stocksDiv.innerHTML += `
+          <div>
+            <p>${stock.name} - $${stock.price}</p>
+            <button onclick="buyStock('${doc.id}', '${stock.name}', ${stock.price})">Buy</button>
+          </div>`;
+      });
+    });
+
+    function buyStock(id, name, price) {
+      const user = auth.currentUser;
+      if (!user) return alert("Please login first");
+
+      db.collection("users").doc(user.uid).collection("portfolio").add({
+        stockId: id,
+        name,
+        price,
+        status: "Pending Payment"
+      });
+      alert("Purchase recorded. Please upload payment confirmation.");
+    }
+
+    // Portfolio
+    const portfolioDiv = document.getElementById("portfolio");
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        db.collection("users").doc(user.uid).collection("portfolio")
+          .onSnapshot(snapshot => {
+            portfolioDiv.innerHTML = "";
+            snapshot.forEach(doc => {
+              const item = doc.data();
+              portfolioDiv.innerHTML += `<p>${item.name} - $${item.price} (${item.status})</p>`;
+            });
+          });
+      }
+    });
+
+    // Upload payment
+    document.getElementById("paymentForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const file = document.getElementById("paymentFile").files[0];
+      if (!file) return;
+
+      const user = auth.currentUser;
+      if (!user) return alert("Please login");
+
+      const ref = storage.ref("payments/" + user.uid + "/" + file.name);
+      ref.put(file).then(snapshot => {
+        snapshot.ref.getDownloadURL().then(url => {
+          db.collection("payments").add({
+            userId: user.uid,
+            fileUrl: url,
+            status: "Pending",
+            uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          alert("Payment confirmation uploaded!");
+        });
+      });
+    });
+  </script>
+</body>
+</html>
